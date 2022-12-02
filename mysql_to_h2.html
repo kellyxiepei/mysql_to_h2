@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mysql To H2</title>
+    <script type="application/javascript">
+        function unique_index_name(sql) {
+            let count = 0;
+            return sql.replace(/create index \w+/g, function (c) {
+                count++;
+                return c + "_" + count.toString();
+            });
+        }
+
+        function unique_constraint_name(sql) {
+            let count = 0;
+            return sql.replace(/constraint \w+/g, function (c) {
+                count++;
+                return c + "_" + count.toString();
+            });
+        }
+
+        function remove_on_update(sql) {
+            return sql.replaceAll(/on update CURRENT_TIMESTAMP/g, "");
+        }
+
+        function quotaKeyword(sql) {
+            return sql.replaceAll(/\tvalue /g, ' `value` ')
+                .replaceAll(/\tuser /g, ' `user` ')
+                .replaceAll(/ user\n/g, ' `user` \n')
+                .replaceAll(/ user /g, ' `user` ');
+        }
+
+        function fixDataTypes(sql){
+            return sql.replaceAll(/double\(\d+,\d+\)/g, 'double')
+                .replaceAll(/float\(\d+,\d+\)/g, 'float')
+                .replaceAll(/varchar(\(\d+\))? charset [A-Za-z0-9_-]+/g, 'varchar');
+        }
+
+        window.onload = function () {
+            document.getElementById("btnConvert").onclick = function () {
+                let sql = document.getElementById("sql").value;
+                sql = unique_index_name(sql);
+                sql = unique_constraint_name(sql);
+                sql = remove_on_update(sql);
+                sql = quotaKeyword(sql);
+                sql = fixDataTypes(sql);
+                document.getElementById("sql").value = sql;
+            }
+        }
+    </script>
+</head>
+<body>
+<textarea id="sql" style="width: 80%;height: 800px;"></textarea>
+<br/>
+<button id="btnConvert">Mysql To H2</button>
+</body>
+</html>
