@@ -6,7 +6,7 @@
     <script type="application/javascript">
         function unique_index_name(sql) {
             let count = 0;
-            return sql.replace(/create index \w+/g, function (c) {
+            return sql.replace(/create index \w+/gi, function (c) {
                 count++;
                 return c + "_" + count.toString();
             });
@@ -14,27 +14,39 @@
 
         function unique_constraint_name(sql) {
             let count = 0;
-            return sql.replace(/constraint \w+/g, function (c) {
+            return sql.replace(/constraint \w+/gi, function (c) {
                 count++;
                 return c + "_" + count.toString();
             });
         }
 
+        function unique_key_name(sql){
+            let count = 0;
+            return sql.replace(/KEY `\w+/gi, function (c) {
+                count++;
+                return c + "_" + count.toString();
+            });
+        }
+
+        function remove_key_length(sql){
+            return sql.replace(/(key `\w+` \(`\w+`)\((\d+)\)\)/gi, '$1)');
+        }
+
         function remove_on_update(sql) {
-            return sql.replaceAll(/on update CURRENT_TIMESTAMP/g, "");
+            return sql.replaceAll(/on update CURRENT_TIMESTAMP/gi, "");
         }
 
         function quotaKeyword(sql) {
-            return sql.replaceAll(/\tvalue /g, ' `value` ')
-                .replaceAll(/\tuser /g, ' `user` ')
-                .replaceAll(/ user\n/g, ' `user` \n')
-                .replaceAll(/ user /g, ' `user` ');
+            return sql.replaceAll(/\tvalue /gi, ' `value` ')
+                .replaceAll(/\tuser /gi, ' `user` ')
+                .replaceAll(/ user\n/gi, ' `user` \n')
+                .replaceAll(/ user /gi, ' `user` ');
         }
 
         function fixDataTypes(sql){
-            return sql.replaceAll(/double\(\d+,\d+\)/g, 'double')
-                .replaceAll(/float\(\d+,\d+\)/g, 'float')
-                .replaceAll(/varchar(\(\d+\))? charset [A-Za-z0-9_-]+/g, 'varchar');
+            return sql.replaceAll(/double\(\d+,\d+\)/gi, 'double')
+                .replaceAll(/float\(\d+,\d+\)/gi, 'float')
+                .replaceAll(/varchar(\(\d+\))? charset [A-Za-z0-9_-]+/gi, 'varchar');
         }
 
         window.onload = function () {
@@ -42,6 +54,8 @@
                 let sql = document.getElementById("sql").value;
                 sql = unique_index_name(sql);
                 sql = unique_constraint_name(sql);
+                sql = unique_key_name(sql);
+                sql = remove_key_length(sql);
                 sql = remove_on_update(sql);
                 sql = quotaKeyword(sql);
                 sql = fixDataTypes(sql);
